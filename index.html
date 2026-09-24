@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  HORN PUB - a simple clothes store website
+  One file = the whole site.
+  Part 1: HTML  (the structure: what is on the page)
+  Part 2: CSS   (the style: colors, sizes, layout)
+  Part 3: JS    (the behavior: cart, filters)
+============================================================= -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Horn Pub | Clothing Store</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&display=swap">
+
+  <!-- ================= PART 2: CSS ================= -->
+  <style>
+    /* Colors live here. Change them and the whole site changes. */
+    :root {
+      --bg: #f5f6f8;
+      --ink: #14213d;
+      --accent: #2f4bff;
+      --soft: #e4e8f7;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    h1, h2, h3, .logo { font-family: "Bricolage Grotesque", system-ui, sans-serif; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--accent); outline-offset: 2px;
+    }
+
+    /* ---------- Top bar ---------- */
+    header {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 5%;
+      background: var(--white);
+      border-bottom: 1px solid var(--soft);
+    }
+    .logo { font-size: 1.5rem; font-weight: 800; }
+    nav { display: flex; gap: 22px; align-items: center; }
+    nav a:hover { color: var(--accent); }
+    .cart-btn {
+      background: var(--ink); color: var(--white);
+      border: none; border-radius: 999px; padding: 8px 18px;
+    }
+    .cart-btn:hover { background: var(--accent); }
+
+    /* ---------- Hero (big top section) ---------- */
+    .hero {
+      padding: 80px 5% 70px;
+      background: var(--ink); color: var(--white);
+    }
+    .hero h1 {
+      font-size: clamp(2.6rem, 8vw, 6rem);
+      font-weight: 800; line-height: 1;
+      max-width: 12ch;
+    }
+    .hero p { margin: 22px 0 30px; max-width: 46ch; color: #c9d1ee; font-size: 1.1rem; }
+    .btn {
+      display: inline-block; background: var(--accent); color: var(--white);
+      border: none; border-radius: 8px; padding: 13px 28px; font-weight: 700;
+    }
+    .btn:hover { background: #1f36d6; }
+
+    /* ---------- Sections ---------- */
+    section { padding: 60px 5%; }
+    section h2 { font-size: 2rem; margin-bottom: 20px; }
+
+    /* Filter buttons */
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+    .filters button {
+      background: var(--white); border: 1px solid var(--soft);
+      border-radius: 999px; padding: 8px 18px;
+    }
+    .filters button.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+
+    /* Product grid: fits as many columns as the screen allows */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 22px;
+    }
+    .product { background: var(--white); border-radius: 12px; overflow: hidden; }
+    .product .pic {
+      height: 190px; display: flex; align-items: center; justify-content: center;
+      font-size: 5rem;
+    }
+    .product .info { padding: 16px; }
+    .product h3 { font-size: 1.1rem; }
+    .product .cat { color: #6b7391; font-size: .9rem; }
+    .product .row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .price { font-weight: 700; font-size: 1.1rem; }
+    .add {
+      background: var(--soft); border: none; border-radius: 8px;
+      padding: 8px 14px; font-weight: 600;
+    }
+    .add:hover { background: var(--accent); color: var(--white); }
+
+    /* About + Contact */
+    .about { background: var(--soft); }
+    .about p { max-width: 62ch; }
+    form { display: grid; gap: 12px; max-width: 480px; }
+    input, textarea {
+      font: inherit; padding: 12px; border: 1px solid #c7cde3;
+      border-radius: 8px; background: var(--white);
+    }
+    #formMsg { margin-top: 12px; font-weight: 600; color: var(--accent); }
+    footer { text-align: center; padding: 26px; background: var(--ink); color: #c9d1ee; }
+
+    /* ---------- Cart panel (slides in from the right) ---------- */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.4);
+      display: none; z-index: 20;
+    }
+    .overlay.open { display: block; }
+    .cart {
+      position: fixed; top: 0; right: 0; height: 100%; width: min(380px, 100%);
+      background: var(--white); z-index: 30; padding: 24px;
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform .25s;
+    }
+    .cart.open { transform: translateX(0); }
+    .cart-head { display: flex; justify-content: space-between; align-items: center; }
+    .close { background: none; border: none; font-size: 1.6rem; }
+    #cartItems { flex: 1; overflow-y: auto; margin: 18px 0; }
+    .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--soft); }
+    .item small { color: #6b7391; }
+    .qty button {
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid var(--soft); background: var(--white);
+    }
+    .empty { color: #6b7391; }
+    .total { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.2rem; margin-bottom: 14px; }
+    .checkout { width: 100%; }
+
+    @media (max-width: 600px) { nav a.link { display: none; } }
+  </style>
+</head>
+
+<!-- ================= PART 1: HTML ================= -->
+<body>
+
+  <!-- Top bar -->
+  <header>
+    <a href="#top" class="logo">Horn Pub</a>
+    <nav>
+      <a class="link" href="#shop">Shop</a>
+      <a class="link" href="#about">About</a>
+      <a class="link" href="#contact">Contact</a>
+      <button class="cart-btn" id="openCart">Cart (<span id="cartCount">0</span>)</button>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero" id="top">
+    <h1>Clothes you'll wear on repeat.</h1>
+    <p>Simple, comfortable pieces for every day. Free delivery on orders over 100.</p>
+    <a href="#shop" class="btn">Shop now</a>
+  </div>
+
+  <!-- Shop -->
+  <section id="shop">
+    <h2>Shop</h2>
+    <div class="filters" id="filters"></div>   <!-- JS fills this -->
+    <div class="grid" id="products"></div>     <!-- JS fills this -->
+  </section>
+
+  <!-- About -->
+  <section class="about" id="about">
+    <h2>About us</h2>
+    <p>Horn Pub started with one idea: good clothes should be easy to find and fair to buy. We choose soft fabrics, honest prices, and designs that go with everything.</p>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact">
+    <h2>Contact us</h2>
+    <form id="contactForm">
+      <input type="text" placeholder="Your name" required>
+      <input type="email" placeholder="Your email" required>
+      <textarea rows="4" placeholder="Your message" required></textarea>
+      <button class="btn" type="submit">Send message</button>
+    </form>
+    <p id="formMsg"></p>
+  </section>
+
+  <footer>&copy; 2026 Horn Pub. All rights reserved.</footer>
+
+  <!-- Cart panel -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="cart" id="cart" aria-label="Shopping cart">
+    <div class="cart-head">
+      <h2>Your cart</h2>
+      <button class="close" id="closeCart" aria-label="Close cart">&times;</button>
+    </div>
+    <div id="cartItems"></div>
+    <div class="total"><span>Total</span><span id="cartTotal">0</span></div>
+    <button class="btn checkout" id="checkout">Checkout</button>
+  </aside>
+
+  <!-- ================= PART 3: JAVASCRIPT ================= -->
+  <script>
+    // Change this to "EGP ", "€", "£"... whatever you sell in.
+    const CURRENCY = "$";
+
+    // Your products. To add a new one, copy a line and edit it.
+    const products = [
+      { id: 1, name: "Classic White Tee",  category: "T-shirts", price: 20,  icon: "👕", color: "#e4e8f7" },
+      { id: 2, name: "Black Graphic Tee",  category: "T-shirts", price: 25,  icon: "👕", color: "#d5d9e6" },
+      { id: 3, name: "Slim Blue Jeans",    category: "Pants",    price: 55,  icon: "👖", color: "#cfe0f5" },
+      { id: 4, name: "Cargo Pants",        category: "Pants",    price: 60,  icon: "👖", color: "#dfe6d3" },
+      { id: 5, name: "Cozy Hoodie",        category: "Hoodies",  price: 70,  icon: "🧥", color: "#f3dcd2" },
+      { id: 6, name: "Zip Hoodie",         category: "Hoodies",  price: 75,  icon: "🧥", color: "#e6d7ee" },
+      { id: 7, name: "Summer Dress",       category: "Dresses",  price: 65,  icon: "👗", color: "#f6e3ea" },
+      { id: 8, name: "Evening Dress",      category: "Dresses",  price: 95,  icon: "👗", color: "#dcd6f0" },
+      { id: 9, name: "Baseball Cap",       category: "Accessories", price: 18, icon: "🧢", color: "#f4ecc9" },
+      { id: 10, name: "Wool Scarf",        category: "Accessories", price: 30, icon: "🧣", color: "#f1d5d5" }
+    ];
+
+    let cart = [];                 // starts empty
+    let currentFilter = "All";     // which category is showing
+
+    // Shortcuts to find things on the page
+    const productsEl = document.getElementById("products");
+    const filtersEl  = document.getElementById("filters");
+    const cartEl     = document.getElementById("cart");
+    const overlayEl  = document.getElementById("overlay");
+
+    // ----- Show the filter buttons -----
+    function showFilters() {
+      const categories = ["All", ...new Set(products.map(p => p.category))];
+      filtersEl.innerHTML = "";
+      categories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.textContent = cat;
+        if (cat === currentFilter) btn.className = "active";
+        btn.onclick = () => { currentFilter = cat; showFilters(); showProducts(); };
+        filtersEl.appendChild(btn);
+      });
+    }
+
+    // ----- Show the products -----
+    function showProducts() {
+      const list = currentFilter === "All"
+        ? products
+        : products.filter(p => p.category === currentFilter);
+
+      productsEl.innerHTML = list.map(p => `
+        <div class="product">
+          <div class="pic" style="background:${p.color}">${p.icon}</div>
+          <div class="info">
+            <h3>${p.name}</h3>
+            <div class="cat">${p.category}</div>
+            <div class="row">
+              <span class="price">${CURRENCY}${p.price}</span>
+              <button class="add" onclick="addToCart(${p.id})">Add to cart</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // ----- Cart logic -----
+    function addToCart(id) {
+      const found = cart.find(item => item.id === id);
+      if (found) found.qty++;
+      else cart.push({ id: id, qty: 1 });
+      showCart();
+      openCart();
+    }
+
+    function changeQty(id, amount) {
+      const item = cart.find(i => i.id === id);
+      item.qty += amount;
+      if (item.qty <= 0) cart = cart.filter(i => i.id !== id);  // remove it
+      showCart();
+    }
+
+    function showCart() {
+      const itemsEl = document.getElementById("cartItems");
+      let total = 0, count = 0;
+
+      if (cart.length === 0) {
+        itemsEl.innerHTML = '<p class="empty">Your cart is empty. Add something you like!</p>';
+      } else {
+        itemsEl.innerHTML = cart.map(item => {
+          const p = products.find(x => x.id === item.id);
+          total += p.price * item.qty;
+          count += item.qty;
+          return `
+            <div class="item">
+              <div>${p.name}<br><small>${CURRENCY}${p.price}</small></div>
+              <div class="qty">
+                <button onclick="changeQty(${p.id}, -1)" aria-label="Remove one">-</button>
+                <span>${item.qty}</span>
+                <button onclick="changeQty(${p.id}, 1)" aria-label="Add one">+</button>
+              </div>
+            </div>`;
+        }).join("");
+      }
+      document.getElementById("cartTotal").textContent = CURRENCY + total;
+      document.getElementById("cartCount").textContent = count;
+    }
+
+    function openCart()  { cartEl.classList.add("open");    overlayEl.classList.add("open"); }
+    function closeCart() { cartEl.classList.remove("open"); overlayEl.classList.remove("open"); }
+
+    document.getElementById("openCart").onclick  = openCart;
+    document.getElementById("closeCart").onclick = closeCart;
+    overlayEl.onclick = closeCart;
+
+    document.getElementById("checkout").onclick = () => {
+      if (cart.length === 0) { alert("Your cart is empty."); return; }
+      alert("Thank you! Your order was placed (this is a demo, no real payment).");
+      cart = [];
+      showCart();
+      closeCart();
+    };
+
+    // ----- Contact form -----
+    document.getElementById("contactForm").onsubmit = (e) => {
+      e.preventDefault();  // stop the page from reloading
+      document.getElementById("formMsg").textContent = "Thanks! We got your message.";
+      e.target.reset();
+    };
+
+    // ----- Start everything when the page opens -----
+    showFilters();
+    showProducts();
+    showCart();
+  </script>
+</body>
+</html>
